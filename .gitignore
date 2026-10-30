@@ -1,0 +1,12 @@
+node_modules/
+.env
+out/
+*.pptx
+*.pdf
+.DS_Store
+.node/
+test/selftest.pptx
+test/_*.pptx
+tools/launcher.applescript
+tools/makeicon.swift
+tools/appicon.icns

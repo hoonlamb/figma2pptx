@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>figma2pptx</title>
+<style>
+  :root{
+    --bg:#fff; --fg:#111; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#001493; --soft:#dde9fc; --ok:#0a7d32; --warn:#b45309; --err:#b91c1c;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#0f1115; --fg:#e8eaed; --muted:#9aa0a6; --line:#272b33; --soft:#16233d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:15px/1.6 Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+    letter-spacing:-0.01em}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 24px 80px}
+  h1{font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:-0.03em}
+  .sub{color:var(--muted);margin:0 0 32px;font-size:14px}
+  label{display:block;font-weight:600;font-size:13px;margin:0 0 6px}
+  input[type=text]{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    background:transparent;color:var(--fg);font:inherit;font-size:14px}
+  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  .row{margin-bottom:18px}
+  .cols{display:grid;grid-template-columns:1fr 200px;gap:14px}
+  @media (max-width:640px){.cols{grid-template-columns:1fr}}
+  .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:12px 22px;
+    font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line);font-weight:600}
+  .banner{background:var(--soft);border-radius:10px;padding:16px 18px;margin-bottom:26px;font-size:14px}
+  .banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12.5px}
+  #log{margin-top:28px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font:12.5px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;
+    white-space:pre-wrap;max-height:340px;overflow:auto;display:none;color:var(--muted)}
+  .result{margin-top:24px;border:1px solid var(--line);border-radius:10px;padding:20px;display:none}
+  .result h2{font-size:16px;margin:0 0 12px}
+  .stat{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;margin-bottom:14px}
+  .flag{padding:9px 12px;border-radius:7px;font-size:13.5px;margin-bottom:8px}
+  .flag.ok{color:var(--ok)} .flag.warn{background:rgba(180,83,9,.1);color:var(--warn)}
+  .flag.err{background:rgba(185,28,28,.1);color:var(--err)}
+  .actions{display:flex;gap:10px;margin-top:16px}
+  .quitbar{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .quitbar .hint{color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>figma2pptx</h1>
+  <p class="sub">Figma 프레임을 편집 가능한 PowerPoint로 변환합니다.</p>
+
+  <div class="banner" id="tokenBox" style="display:none">
+    <strong>먼저 Figma 토큰이 필요합니다.</strong><br>
+    Figma → Settings → Security → Personal access tokens에서 생성하세요. 스코프는 <code>File content: Read</code>면 충분합니다.
+    토큰은 이 컴퓨터의 <code>.env</code> 파일에만 저장되고 figma.com 외에는 전송되지 않습니다.
+    <div class="row" style="margin:14px 0 0"><input type="text" id="token" placeholder="figd_..." autocomplete="off"></div>
+    <button class="ghost" id="saveToken" style="margin-top:10px">토큰 저장</button>
+    <!-- pre-wrap: the server's message is a checklist, one cause per line -->
+    <div id="tokenErr" style="display:none;margin-top:10px;color:#b3261e;line-height:1.6;white-space:pre-wrap"></div>
+  </div>
+
+  <div id="form">
+    <div class="row">
+      <label for="target">Figma 링크</label>
+      <input type="text" id="target" placeholder="https://www.figma.com/design/… (섹션이나 프레임을 선택한 상태의 링크)">
+    </div>
+    <div class="row cols">
+      <div>
+        <label for="out">저장 폴더</label>
+        <input type="text" id="out">
+      </div>
+      <div>
+        <label for="name">파일 이름</label>
+        <input type="text" id="name" placeholder="(자동)">
+      </div>
+    </div>
+    <div class="row check">
+      <input type="checkbox" id="verify" checked>
+      <label for="verify" style="margin:0;font-weight:400">변환 후 자동 검수 (PowerPoint로 렌더링해 원본과 비교)</label>
+    </div>
+    <button id="go">변환 시작</button>
+    <a href="#" id="changeToken" class="hint" style="margin-left:14px">토큰 변경</a>
+  </div>
+
+  <div id="log"></div>
+  <div class="result" id="result"></div>
+
+  <div class="quitbar">
+    <button class="ghost" id="quit">프로그램 종료</button>
+    <span class="hint">작업이 끝나면 눌러 주세요. 백그라운드 서버가 함께 종료됩니다.</span>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+
+fetch('/status').then(r => r.json()).then(s => {
+  $('#out').value = s.defaultOut;
+  if (!s.hasToken) { $('#tokenBox').style.display = 'block'; $('#form').style.display = 'none'; }
+  // under launchd the server is meant to stay up; quitting it here would just
+  // leave the bookmark dead until the next login
+  if (s.managed) $('.quitbar').style.display = 'none';
+});
+
+$('#saveToken').onclick = async () => {
+  const token = $('#token').value.trim();
+  const err = $('#tokenErr');
+  if (!token) { $('#token').focus(); return; }
+
+  const btn = $('#saveToken');
+  btn.disabled = true; btn.textContent = '확인 중…'; err.style.display = 'none';
+  const r = await fetch('/token', { method:'POST', body: JSON.stringify({ token }) });
+  btn.disabled = false; btn.textContent = '토큰 저장';
+
+  // the server actually tries the token against Figma, so a failure here is a
+  // real answer — show it rather than letting a dead token through
+  if (!r.ok) { err.textContent = await r.text(); err.style.display = 'block'; return; }
+  $('#tokenBox').style.display = 'none'; $('#form').style.display = 'block';
+};
+
+$('#changeToken').onclick = async (e) => {
+  e.preventDefault();
+  await fetch('/token', { method:'DELETE' });
+  $('#token').value = ''; $('#tokenErr').style.display = 'none';
+  $('#form').style.display = 'none'; $('#tokenBox').style.display = 'block';
+  $('#token').focus();
+};
+
+$('#go').onclick = () => {
+  const target = $('#target').value.trim();
+  if (!target) { $('#target').focus(); return; }
+
+  $('#go').disabled = true;
+  const log = $('#log');
+  log.style.display = 'block';
+  log.textContent = '';
+  $('#result').style.display = 'none';
+
+  const q = new URLSearchParams({
+    target,
+    out: $('#out').value.trim(),
+    name: $('#name').value.trim(),
+    verify: $('#verify').checked ? '1' : '0',
+  });
+
+  const es = new EventSource('/convert?' + q);
+  es.onmessage = (ev) => {
+    const { type, data } = JSON.parse(ev.data);
+    if (type === 'log') { log.textContent += data + '\n'; log.scrollTop = log.scrollHeight; }
+    if (type === 'error') { finish(); showError(data); es.close(); }
+    if (type === 'done') { finish(); showResult(data); es.close(); }
+  };
+  es.onerror = () => { finish(); es.close(); };
+  function finish(){ $('#go').disabled = false; }
+};
+
+function showError(msg) {
+  const r = $('#result');
+  r.style.display = 'block';
+  r.innerHTML = '<h2>실패</h2><div class="flag err"></div>';
+  r.querySelector('.flag').textContent = msg;
+}
+
+function showResult(rep) {
+  const r = $('#result');
+  r.style.display = 'block';
+  const bad = rep.verify && rep.verify.ran ? rep.verify.pages.filter(p => p.status === 'check') : [];
+
+  let html = '<h2>완료</h2>';
+  html += `<div class="stat"><span>슬라이드 ${rep.slides}</span><span>텍스트 ${rep.texts}</span>`
+       +  `<span>도형·선 ${rep.shapes}</span><span>이미지 ${rep.images}</span></div>`;
+
+  if (rep.missingFonts.length) {
+    html += `<div class="flag warn">설치되지 않은 서체: ${esc(rep.missingFonts.join(', '))} — 설치 후 다시 열면 정상 표시됩니다.</div>`;
+  }
+  if (rep.verify && rep.verify.ran) {
+    html += bad.length
+      ? `<div class="flag warn">확인이 필요한 페이지 ${bad.length}장: ${bad.map(p => 'p' + p.index).join(', ')} — 리포트의 diff 이미지를 확인하세요.</div>`
+      : `<div class="flag ok">✅ 렌더 비교 통과 — 원본과 일치합니다.</div>`;
+  } else if (rep.verify) {
+    html += `<div class="flag warn">렌더 비교 건너뜀 — ${esc(rep.verify.reason)}</div>`;
+  }
+  if (rep.warnings && rep.warnings.length) {
+    html += `<div class="flag warn">경고 ${rep.warnings.length}건 — 리포트를 확인하세요.</div>`;
+  }
+
+  html += '<div class="actions">'
+       +  `<button class="ghost" onclick="reveal('${esc(rep.file)}')">PPTX 위치 열기</button>`
+       +  `<button class="ghost" onclick="reveal('${esc(rep.reportPath)}')">리포트 열기</button></div>`;
+  r.innerHTML = html;
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function reveal(p){ fetch('/reveal?path=' + encodeURIComponent(p)); }
+
+$('#quit').onclick = async () => {
+  try { await fetch('/quit'); } catch (e) {}
+  document.body.innerHTML = '<div style="max-width:820px;margin:0 auto;padding:80px 24px;'
+    + 'font:16px Pretendard,-apple-system,sans-serif;color:#6b7280">'
+    + '종료되었습니다. 이 탭은 닫으셔도 됩니다.</div>';
+};
+</script>
+</body>
+</html>

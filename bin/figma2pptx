@@ -1,0 +1,29 @@
+#!/bin/bash
+# Terminal entry point.
+#   figma2pptx                → open the GUI
+#   figma2pptx <피그마 링크>   → convert straight away
+set -e
+
+# This is normally reached through a symlink in ~/bin, so walk the link chain —
+# dirname of the symlink itself points at the wrong project.
+SELF="${BASH_SOURCE[0]}"
+while [ -L "$SELF" ]; do
+  LINK="$(readlink "$SELF")"
+  case "$LINK" in
+    /*) SELF="$LINK" ;;
+    *)  SELF="$(dirname "$SELF")/$LINK" ;;
+  esac
+done
+DIR="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if [ $# -eq 0 ]; then
+  exec "$DIR/figma2pptx.command"
+fi
+
+NODE=""
+for c in "$DIR/.node/bin/node" /usr/local/bin/node /opt/homebrew/bin/node /usr/bin/node "$(command -v node 2>/dev/null)"; do
+  [ -x "$c" ] && { NODE="$c"; break; }
+done
+[ -z "$NODE" ] && { echo "Node.js를 찾지 못했습니다. https://nodejs.org 에서 설치해 주세요."; exit 1; }
+
+exec "$NODE" "$DIR/bin/cli.js" "$@"

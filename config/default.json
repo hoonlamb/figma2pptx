@@ -1,0 +1,75 @@
+{
+  "slideWidthInches": 13.3333,
+  "fonts": {
+    "//": "Figma의 폰트 패밀리를 PowerPoint가 인식하는 이름으로 바꿉니다. 좌변은 Figma 이름.",
+    "familyMap": {
+      "Noto Sans KR": "Pretendard",
+      "Apple SD Gothic Neo": "Pretendard",
+      "Inter": "Pretendard"
+    },
+    "//weights": "굵기별 실제 서체 이름. suffix는 패밀리 뒤에 붙고, bold=true면 PPT의 굵게 속성을 씁니다.",
+    "weights": {
+      "900": {
+        "suffix": " Black"
+      },
+      "800": {
+        "suffix": " ExtraBold"
+      },
+      "700": {
+        "suffix": "",
+        "bold": true
+      },
+      "600": {
+        "suffix": " SemiBold"
+      },
+      "500": {
+        "suffix": " Medium"
+      },
+      "400": {
+        "suffix": ""
+      },
+      "300": {
+        "suffix": " Light"
+      },
+      "200": {
+        "suffix": " ExtraLight"
+      },
+      "100": {
+        "suffix": " Thin"
+      }
+    }
+  },
+  "text": {
+    "//": "PowerPoint는 같은 서체를 Figma보다 미세하게 넓게 조판합니다. 그대로 두면 한 줄짜리 문장이 두 줄로 깨지므로 텍스트 박스에 여유 폭을 줍니다.",
+    "padNoWrapPx": 40,
+    "//padWrapPx": "사용하지 않습니다. 줄바꿈되는 텍스트 상자는 Figma가 준 폭을 그대로 씁니다 — 여유를 주면 줄바꿈 위치가 달라져 표가 어긋납니다.",
+    "padWrapPx": 0,
+    "//lineSpacing": "Figma의 절대 행간(px)을 PPT의 고정 행간(pt)으로 옮깁니다. multiple 방식은 PPT가 1.2배를 곱해버려 어긋납니다.",
+    "useExactLineSpacing": true,
+    "//driftReportPx": "디자인 폭과 실제 조판 폭이 이만큼(px) 이상 다르면 리포트에 남깁니다.",
+    "driftReportPx": 2
+  },
+  "raster": {
+    "//": "네이티브 도형으로 표현할 수 없는 노드(아이콘·이미지·그라디언트)의 렌더 배율.",
+    "scale": 3,
+    "//jpeg": "투명도를 쓰지 않는 사진은 JPEG로 담아 용량을 줄입니다. 투명한 픽셀이 하나라도 있으면 PNG를 그대로 유지합니다.",
+    "jpeg": true,
+    "jpegQuality": 90,
+    "jpegMinBytes": 122880,
+    "//cache": "받은 이미지를 디스크에 보관해 다시 변환할 때 Figma 렌더링을 건너뜁니다. Figma 파일이 수정되면 자동으로 무효화됩니다.",
+    "cache": true,
+    "//renderBatch": "Figma에 한 번에 렌더링을 요청할 이미지 수. 한 묶음이 끝날 때마다 캐시에 저장되므로, 작을수록 중단 시 잃는 게 적습니다.",
+    "renderBatch": 30,
+    "//concurrency": "이미지를 동시에 몇 개씩 받을지. 아이콘이 수천 개인 덱에서 대기 시간이 그대로 쌓이지 않게 합니다.",
+    "concurrency": 5
+  },
+  "verify": {
+    "//": "변환 결과를 PDF로 렌더링해 Figma 원본 이미지와 페이지별로 비교합니다.",
+    "enabled": true,
+    "//diffThreshold": "이 비율을 넘는 페이지만 ⚠️ 표시. 두 렌더러는 글자 외곽선을 조금씩 다르게 그리므로 완벽한 변환도 1~3%는 나옵니다. 실제로 무언가 밀리거나 빠지면 그보다 훨씬 커집니다.",
+    "diffThreshold": 0.04,
+    "//keepImages": "검수 이미지 보관 범위. flagged=⚠️ 페이지만(기본) · all=전부(용량 큼) · none=안 남김",
+    "keepImages": "flagged",
+    "renderScale": 2
+  }
+}

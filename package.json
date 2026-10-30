@@ -1,0 +1,21 @@
+{
+  "name": "figma2pptx",
+  "version": "1.0.0",
+  "description": "Figma 프레임을 편집 가능한 PowerPoint(.pptx)로 변환합니다. 텍스트·도형·표선은 네이티브 개체로, 아이콘·이미지는 고해상도 래스터로 재현합니다.",
+  "type": "commonjs",
+  "bin": {
+    "figma2pptx": "bin/cli.js"
+  },
+  "scripts": {
+    "gui": "node gui/server.js",
+    "convert": "node bin/cli.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0",
+    "pngjs": "^7.0.0",
+    "pixelmatch": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

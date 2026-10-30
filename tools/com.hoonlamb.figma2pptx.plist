@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.hoonlamb.figma2pptx</string>
+
+  <!-- __NODE__ / __DIR__ are filled in by install.sh: launchd has no shell,
+       no PATH from .zshrc, and no notion of the project folder. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__DIR__/gui/server.js</string>
+  </array>
+  <key>WorkingDirectory</key><string>__DIR__</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PORT</key><string>4785</string>
+    <!-- launchd starts this with no browser attached; opening one at login
+         would hijack the screen every morning. -->
+    <key>F2P_NO_OPEN</key><string>1</string>
+    <!-- launchd owns the lifecycle now, so the web UI must not offer to quit -->
+    <key>F2P_MANAGED</key><string>1</string>
+  </dict>
+
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key>
+  <dict><key>SuccessfulExit</key><false/></dict>
+
+  <key>StandardOutPath</key><string>/tmp/figma2pptx.log</string>
+  <key>StandardErrorPath</key><string>/tmp/figma2pptx.log</string>
+</dict>
+</plist>
