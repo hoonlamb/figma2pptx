@@ -41,8 +41,10 @@ function pptxToPdf(pptxPath, pdfPath, log) {
     // "Grant File Access" dialog nobody is watching, and the script hangs until the
     // AppleEvent times out. Its own container needs no grant, so render there.
     const box = path.join(os.homedir(), 'Library/Containers/com.microsoft.Powerpoint/Data/tmp', `figma2pptx-${process.pid}`);
-    const boxPptx = path.join(box, 'render.pptx');
-    const boxPdf = path.join(box, 'render.pdf');
+    // PowerPoint refuses a second open deck of the same name, so a leftover from an
+    // interrupted run must not be able to block this one.
+    const boxPptx = path.join(box, `render-${process.pid}.pptx`);
+    const boxPdf = path.join(box, `render-${process.pid}.pdf`);
     const script = `
 tell application "Microsoft PowerPoint"
   open POSIX file "${boxPptx}"
